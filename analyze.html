@@ -1,0 +1,522 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FloatChat Ocean Monitoring</title>
+
+<script src="https://unpkg.com/globe.gl"></script>
+<script src="https://unpkg.com/topojson-client"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI;
+}
+
+body{
+background:radial-gradient(circle,#062b63,#020b22);
+overflow:hidden;
+color:white;
+}
+
+header{
+text-align:center;
+padding:15px;
+font-size:26px;
+background:linear-gradient(90deg,#021b3a,#003a6b);
+}
+
+#globeViz{
+width:100vw;
+height:92vh;
+}
+
+/* FLOAT INFO */
+
+#floatInfo{
+position:absolute;
+right:20px;
+top:90px;
+width:230px;
+background:rgba(5,20,50,0.9);
+padding:15px;
+border-radius:10px;
+box-shadow:0 0 20px rgba(0,200,255,0.5);
+}
+
+/* ANALYTICS */
+
+#analyticsPanel{
+
+position:absolute;
+left:20px;
+top:90px;
+
+width:220px;
+
+background:rgba(5,20,50,0.9);
+padding:15px;
+border-radius:10px;
+
+}
+
+#analyticsPanel h3{
+margin-bottom:10px;
+color:#4fd1ff;
+}
+
+/* CHART PANEL */
+
+#chartPanel{
+
+position:absolute;
+left:20px;
+top:260px;
+
+width:320px;
+
+background:rgba(5,20,50,0.9);
+padding:15px;
+border-radius:10px;
+
+}
+
+/* TABLE CONTROLS */
+
+.tableControls{
+
+position:absolute;
+top:90px;
+left:260px;
+
+display:flex;
+gap:10px;
+
+}
+
+.tableControls button{
+
+padding:8px 12px;
+background:#0077ff;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+
+}
+
+.tableControls input{
+
+padding:8px;
+border-radius:6px;
+border:none;
+
+}
+
+/* TABLE */
+
+#dataTableContainer{
+
+position:absolute;
+bottom:0;
+left:0;
+
+width:100%;
+max-height:40vh;
+
+background:#071a38;
+
+overflow-y:auto;
+display:none;
+
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border:1px solid rgba(255,255,255,0.2);
+text-align:center;
+}
+
+th{
+background:#003a6b;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<header>
+🌍 FloatChat Global Ocean Monitoring
+</header>
+
+<div id="globeViz"></div>
+
+<div id="floatInfo">
+<h3>Float Information</h3>
+<p id="infoText">Click a float marker</p>
+</div>
+
+
+<div id="analyticsPanel">
+
+<h3>📊 Ocean Analytics</h3>
+
+<p>Total Floats: <span id="totalFloats">0</span></p>
+<p>Avg Temperature: <span id="avgTemp">0</span> °C</p>
+<p>Avg Salinity: <span id="avgSal">0</span> PSU</p>
+<p>Highest Temp Float: <span id="maxTempFloat">-</span></p>
+
+</div>
+
+
+<div id="chartPanel">
+
+<h3>📈 Ocean Graphs</h3>
+
+<canvas id="tempChart"></canvas>
+<canvas id="salChart"></canvas>
+
+</div>
+
+
+<div class="tableControls">
+
+<button id="showTableBtn">📊 Show Data</button>
+
+<input id="searchBox" placeholder="Search Float">
+
+<button id="downloadCSV">⬇ CSV</button>
+
+</div>
+
+
+<div id="dataTableContainer">
+
+<table id="floatTable">
+
+<thead>
+
+<tr>
+<th>Float ID</th>
+<th>Lat</th>
+<th>Lng</th>
+<th>Temp</th>
+<th>Sal</th>
+</tr>
+
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+
+<script>
+
+/* FLOAT DATA */
+
+const floats=[];
+
+for(let i=0;i<80;i++){
+
+floats.push({
+
+lat:(Math.random()*140)-70,
+lng:(Math.random()*360)-180,
+id:"ARGO-"+Math.floor(Math.random()*9000),
+temp:(26+Math.random()*4).toFixed(1),
+sal:(33+Math.random()).toFixed(2)
+
+});
+
+}
+
+
+/* CREATE GLOBE */
+
+const globe=Globe()
+
+(document.getElementById("globeViz"))
+
+.globeImageUrl(
+"https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+)
+
+.bumpImageUrl(
+"https://unpkg.com/three-globe/example/img/earth-topology.png"
+)
+
+.showAtmosphere(true)
+
+.atmosphereColor("#3a8cff")
+
+.pointsData(floats)
+
+.pointAltitude(0.02)
+
+.pointRadius(0.35)
+
+.pointColor(()=>"cyan")
+
+.pointLabel(d=>
+
+`Float: ${d.id}
+Temp: ${d.temp}°C
+Sal: ${d.sal}`
+
+)
+
+.onPointClick(d=>{
+
+document.getElementById("infoText").innerHTML=
+
+"<b>"+d.id+"</b><br>"+
+"Temp: "+d.temp+"°C<br>"+
+"Salinity: "+d.sal;
+
+});
+
+
+/* HEATMAP */
+
+const heatData=floats.map(f=>({
+lat:f.lat,
+lng:f.lng,
+weight:parseFloat(f.temp)
+}));
+
+globe
+
+.heatmapsData([heatData])
+
+.heatmapPointLat(d=>d.lat)
+
+.heatmapPointLng(d=>d.lng)
+
+.heatmapPointWeight(d=>d.weight)
+
+.heatmapBandwidth(3);
+
+
+/* ANALYTICS */
+
+function updateAnalytics(){
+
+let tempSum=0;
+let salSum=0;
+
+let maxTemp=-999;
+let maxFloat="";
+
+floats.forEach(f=>{
+
+tempSum+=parseFloat(f.temp);
+salSum+=parseFloat(f.sal);
+
+if(parseFloat(f.temp)>maxTemp){
+
+maxTemp=f.temp;
+maxFloat=f.id;
+
+}
+
+});
+
+document.getElementById("totalFloats").innerText=floats.length;
+
+document.getElementById("avgTemp").innerText=(tempSum/floats.length).toFixed(2);
+
+document.getElementById("avgSal").innerText=(salSum/floats.length).toFixed(2);
+
+document.getElementById("maxTempFloat").innerText=
+maxFloat+" ("+maxTemp+"°C)";
+
+}
+
+updateAnalytics();
+
+
+/* CHARTS */
+
+let timeLabels=[];
+let tempData=[];
+let salData=[];
+
+const tempChart=new Chart(
+document.getElementById("tempChart"),
+{
+type:"line",
+data:{
+labels:timeLabels,
+datasets:[{
+label:"Avg Temp",
+data:tempData,
+borderColor:"cyan"
+}]
+}
+}
+);
+
+const salChart=new Chart(
+document.getElementById("salChart"),
+{
+type:"line",
+data:{
+labels:timeLabels,
+datasets:[{
+label:"Avg Sal",
+data:salData,
+borderColor:"orange"
+}]
+}
+}
+);
+
+
+/* GRAPH UPDATE */
+
+function updateGraphs(){
+
+let t=0,s=0;
+
+floats.forEach(f=>{
+t+=parseFloat(f.temp);
+s+=parseFloat(f.sal);
+});
+
+let avgT=(t/floats.length).toFixed(2);
+let avgS=(s/floats.length).toFixed(2);
+
+const time=new Date().toLocaleTimeString();
+
+timeLabels.push(time);
+tempData.push(avgT);
+salData.push(avgS);
+
+if(timeLabels.length>10){
+
+timeLabels.shift();
+tempData.shift();
+salData.shift();
+
+}
+
+tempChart.update();
+salChart.update();
+
+}
+
+setInterval(updateGraphs,5000);
+
+
+/* TABLE */
+
+const tableBody=document.querySelector("#floatTable tbody");
+
+function loadTable(){
+
+tableBody.innerHTML="";
+
+floats.forEach(f=>{
+
+let row=document.createElement("tr");
+
+row.innerHTML=`
+
+<td>${f.id}</td>
+<td>${f.lat.toFixed(2)}</td>
+<td>${f.lng.toFixed(2)}</td>
+<td>${f.temp}</td>
+<td>${f.sal}</td>
+
+`;
+
+tableBody.appendChild(row);
+
+});
+
+}
+
+document.getElementById("showTableBtn").onclick=()=>{
+
+let box=document.getElementById("dataTableContainer");
+
+if(box.style.display=="none"){
+
+loadTable();
+box.style.display="block";
+
+}else{
+
+box.style.display="none";
+
+}
+
+};
+
+
+/* SEARCH */
+
+document.getElementById("searchBox")
+.addEventListener("keyup",()=>{
+
+let filter=document.getElementById("searchBox")
+.value.toUpperCase();
+
+let rows=document.querySelectorAll("#floatTable tbody tr");
+
+rows.forEach(r=>{
+
+let txt=r.children[0].innerText;
+
+r.style.display=txt.includes(filter)?"":"none";
+
+});
+
+});
+
+
+/* CSV DOWNLOAD */
+
+document.getElementById("downloadCSV").onclick=()=>{
+
+let csv="Float ID,Lat,Lng,Temp,Sal\n";
+
+floats.forEach(f=>{
+csv+=`${f.id},${f.lat},${f.lng},${f.temp},${f.sal}\n`;
+});
+
+const blob=new Blob([csv]);
+
+const a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+a.download="float_data.csv";
+a.click();
+
+};
+
+</script>
+
+</body>
+</html>
+

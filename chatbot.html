@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>FloatChat AI Chatbot</title>
+
+<link rel="stylesheet" href="style.css">
+
+<style>
+
+body{
+margin:0;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+font-family:Arial, sans-serif;
+
+/* Background image */
+background-image:url("images/ocean-bg.jpg");
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
+}
+.chat-container{
+width:650px;          /* bigger chatbot */
+height:500px;
+background:#0b1c33;
+border-radius:16px;
+box-shadow:0 0 25px rgba(0,0,0,0.6);
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+.chat-header{
+background:linear-gradient(90deg,#1fa2ff,#12d8fa,#1fa2ff);
+padding:18px;
+font-size:22px;
+font-weight:bold;
+text-align:center;
+color:white;
+letter-spacing:1px;
+}
+
+.messages{
+flex:1;
+padding:20px;
+overflow-y:auto;
+}
+
+.bot-msg{
+background:#1e3357;
+color:white;
+padding:12px 16px;
+border-radius:12px;
+margin-bottom:12px;
+width:fit-content;
+max-width:70%;
+}
+
+.user-msg{
+background:#0ea5e9;
+color:white;
+padding:12px 16px;
+border-radius:12px;
+margin-left:auto;
+margin-bottom:12px;
+max-width:70%;
+}
+
+.chat-input{
+display:flex;
+padding:15px;
+background:#081426;
+}
+
+.chat-input input{
+flex:1;
+padding:12px;
+border-radius:8px;
+border:none;
+outline:none;
+font-size:15px;
+}
+
+.chat-input button{
+margin-left:10px;
+padding:12px 20px;
+background:#1fa2ff;
+border:none;
+border-radius:8px;
+color:white;
+font-size:15px;
+cursor:pointer;
+}
+
+.chat-input button:hover{
+background:#0ea5e9;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(5px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+</style>
+
+</head>
+<body>
+    
+
+<div class="chat-container">
+
+<div class="chat-header">
+🤖 FloatChat AI Assistant
+</div>
+
+<div class="messages" id="chat">
+
+<div class="bot-msg">
+Hello! Ask about ocean temperature, salinity, or floats.
+</div>
+
+</div>
+
+<div class="chat-input">
+
+<input type="text" id="msg" placeholder="Ask about ocean data...">
+
+<button onclick="send()">Send</button>
+
+</div>
+
+</div>
+
+<script>
+
+function send(){
+
+let msg=document.getElementById("msg").value;
+let chat=document.getElementById("chat");
+
+if(msg==="") return;
+
+chat.innerHTML+=`<div class="user-msg">${msg}</div>`;
+
+let reply="Analyzing ocean data...";
+
+if(msg.toLowerCase().includes("temperature")){
+reply="🌡 Current ocean temperature near Mumbai is 28.8°C";
+}
+else if(msg.toLowerCase().includes("salinity")){
+reply="🌊 Current salinity is 33.5 PSU";
+}
+else if(msg.toLowerCase().includes("floats")){
+reply="📡 84 ARGO floats are active in the Indian Ocean";
+}
+
+setTimeout(()=>{
+chat.innerHTML+=`<div class="bot-msg">${reply}</div>`;
+chat.scrollTop=chat.scrollHeight;
+},800);
+
+document.getElementById("msg").value="";
+}
+
+</script>
+
+</body>
+</html>

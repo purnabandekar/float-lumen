@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FloatChat Real Earth Globe</title>
+
+<script src="https://unpkg.com/globe.gl"></script>
+<script src="https://unpkg.com/topojson-client"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+
+/* RESET */
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI;
+}
+
+/* OCEAN BACKGROUND */
+
+body{
+background:radial-gradient(circle at center,#0b3d91,#021433 70%);
+overflow:hidden;
+color:white;
+}
+
+/* HEADER */
+
+header{
+width:100%;
+padding:14px;
+text-align:center;
+font-size:24px;
+background:linear-gradient(90deg,#021b3a,#003a6b);
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+}
+
+/* GLOBE */
+
+#globeViz{
+width:100vw;
+height:92vh;
+}
+
+/* FLOAT INFO PANEL */
+
+#floatInfo{
+
+position:absolute;
+right:25px;
+top:90px;
+
+width:260px;
+
+background:rgba(6,18,45,0.9);
+
+padding:18px;
+
+border-radius:12px;
+
+box-shadow:0 0 25px rgba(0,200,255,0.6);
+
+backdrop-filter:blur(8px);
+
+}
+
+#floatInfo h3{
+margin-bottom:10px;
+color:#4fd1ff;
+}
+
+#floatInfo p{
+line-height:1.6;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<header>
+🌍 FloatChat Real Earth Globe
+</header>
+
+<div id="globeViz"></div>
+
+<div id="floatInfo">
+<h3>Float Information</h3>
+<p id="infoText">Click a float marker</p>
+</div>
+
+
+<script>
+
+/* FLOAT DATA */
+
+const floats=[];
+
+for(let i=0;i<80;i++){
+
+floats.push({
+
+lat:(Math.random()*140)-70,
+lng:(Math.random()*360)-180,
+
+id:"ARGO-"+Math.floor(Math.random()*9000),
+temp:(26+Math.random()*4).toFixed(1),
+sal:(33+Math.random()).toFixed(2)
+
+});
+
+}
+
+
+/* CREATE GLOBE */
+
+const globe = Globe()
+(document.getElementById("globeViz"))
+
+/* REALISTIC EARTH TEXTURE */
+
+.globeImageUrl(
+"https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+)
+
+/* REALISTIC TOPOGRAPHY */
+
+.bumpImageUrl(
+"https://unpkg.com/three-globe/example/img/earth-topology.png"
+)
+
+/* CLOUD LAYER */
+
+.showAtmosphere(true)
+.atmosphereColor("#3a8cff")
+.atmosphereAltitude(0.25)
+
+/* BACKGROUND */
+
+.backgroundImageUrl(
+"https://unpkg.com/three-globe/example/img/night-sky.png"
+)
+
+/* FLOAT POINTS */
+
+.pointsData(floats)
+.pointAltitude(0.02)
+.pointRadius(0.35)
+.pointColor(()=>"#00ffff")
+
+.pointLabel(d=>
+`Float: ${d.id}
+Temp: ${d.temp}°C
+Salinity: ${d.sal} PSU`
+)
+
+.onPointClick(d=>{
+
+document.getElementById("infoText").innerHTML=
+
+"<b>Float ID:</b> "+d.id+
+
+"<br>🌡 Temperature: "+d.temp+"°C"+
+
+"<br>🌊 Salinity: "+d.sal+" PSU";
+
+});
+
+
+/* COUNTRY BORDERS */
+
+fetch("https://unpkg.com/world-atlas@2/countries-110m.json")
+.then(res=>res.json())
+.then(data=>{
+
+const countries = topojson.feature(
+data,
+data.objects.countries
+).features;
+
+globe
+
+.polygonsData(countries)
+
+.polygonAltitude(0.003)
+
+.polygonCapColor(()=>"rgba(0,150,255,0.05)")
+
+.polygonSideColor(()=>"rgba(0,100,200,0.2)")
+
+.polygonStrokeColor(()=>"cyan");
+
+});
+
+
+/* ROTATION */
+
+const controls = globe.controls();
+
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.2;
+
+controls.minDistance = 200;
+controls.maxDistance = 500;
+
+
+/* FLOAT MOVEMENT */
+
+setInterval(()=>{
+
+floats.forEach(f=>{
+
+f.lat += (Math.random()-0.5)*0.2;
+f.lng += (Math.random()-0.5)*0.2;
+
+});
+
+globe.pointsData(floats);
+
+},6000);
+
+</script>
+
+</body>
+</html>

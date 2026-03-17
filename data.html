@@ -1,0 +1,413 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FloatChat Ocean Monitoring</title>
+
+<script src="https://unpkg.com/globe.gl"></script>
+<script src="https://unpkg.com/topojson-client"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<style>
+
+/* RESET */
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI;
+}
+
+/* BACKGROUND */
+
+body{
+background:radial-gradient(circle at center,#0b3d91,#021433 70%);
+overflow:hidden;
+color:white;
+}
+
+/* HEADER */
+
+header{
+width:100%;
+padding:14px;
+text-align:center;
+font-size:24px;
+background:linear-gradient(90deg,#021b3a,#003a6b);
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+}
+
+/* GLOBE */
+
+#globeViz{
+width:100vw;
+height:92vh;
+}
+
+/* FLOAT INFO */
+
+#floatInfo{
+position:absolute;
+right:20px;
+top:90px;
+width:250px;
+background:rgba(5,20,50,0.9);
+padding:16px;
+border-radius:10px;
+box-shadow:0 0 20px rgba(0,200,255,0.5);
+}
+
+/* CONTROLS */
+
+.tableControls{
+position:absolute;
+top:90px;
+left:20px;
+display:flex;
+gap:10px;
+}
+
+.tableControls button{
+padding:8px 12px;
+background:#0077ff;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.tableControls input{
+padding:8px;
+border-radius:6px;
+border:none;
+}
+
+/* DATA TABLE */
+
+#dataTableContainer{
+position:absolute;
+bottom:0;
+left:0;
+width:100%;
+max-height:40vh;
+background:#071a38;
+overflow-y:auto;
+display:none;
+}
+
+#floatTable{
+width:100%;
+border-collapse:collapse;
+color:white;
+}
+
+#floatTable th,
+#floatTable td{
+padding:10px;
+border:1px solid rgba(255,255,255,0.2);
+text-align:center;
+}
+
+#floatTable th{
+background:#003a6b;
+cursor:pointer;
+}
+
+#floatTable tr:hover{
+background:#002a55;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<header>
+🌍 FloatChat Global Ocean Monitoring
+</header>
+
+<div id="globeViz"></div>
+
+<div id="floatInfo">
+<h3>Float Information</h3>
+<p id="infoText">Click a float marker</p>
+</div>
+
+
+<div class="tableControls">
+
+<button id="showTableBtn">📊 Show Float Data</button>
+
+<input type="text" id="searchBox" placeholder="Search Float ID">
+
+<button id="downloadCSV">⬇ Download CSV</button>
+
+</div>
+
+
+<div id="dataTableContainer">
+
+<table id="floatTable">
+
+<thead>
+<tr>
+<th onclick="sortTable(0)">Float ID</th>
+<th onclick="sortTable(1)">Latitude</th>
+<th onclick="sortTable(2)">Longitude</th>
+<th onclick="sortTable(3)">Temp °C</th>
+<th onclick="sortTable(4)">Salinity</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+
+<script>
+
+/* FLOAT DATA */
+
+const floats=[];
+
+for(let i=0;i<80;i++){
+
+floats.push({
+
+lat:(Math.random()*140)-70,
+lng:(Math.random()*360)-180,
+id:"ARGO-"+Math.floor(Math.random()*9000),
+temp:(26+Math.random()*4).toFixed(1),
+sal:(33+Math.random()).toFixed(2)
+
+});
+
+}
+
+
+/* CREATE GLOBE */
+
+const globe = Globe()
+(document.getElementById("globeViz"))
+
+.globeImageUrl(
+"https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+)
+
+.bumpImageUrl(
+"https://unpkg.com/three-globe/example/img/earth-topology.png"
+)
+
+.backgroundColor("rgba(0,0,0,0)")
+
+.showAtmosphere(true)
+.atmosphereColor("#3a8cff")
+.atmosphereAltitude(0.25)
+
+.pointsData(floats)
+.pointAltitude(0.02)
+.pointRadius(0.35)
+.pointColor(()=>"#00ffff")
+
+.pointLabel(d=>
+`Float: ${d.id}
+Temp: ${d.temp}°C
+Salinity: ${d.sal}`
+)
+
+.onPointClick(d=>{
+
+document.getElementById("infoText").innerHTML=
+
+"<b>Float ID:</b> "+d.id+
+"<br>🌡 Temperature: "+d.temp+"°C"+
+"<br>🌊 Salinity: "+d.sal;
+
+});
+
+
+/* COUNTRY BORDERS */
+
+fetch("https://unpkg.com/world-atlas@2/countries-110m.json")
+.then(res=>res.json())
+.then(data=>{
+
+const countries = topojson.feature(
+data,
+data.objects.countries
+).features;
+
+globe
+.polygonsData(countries)
+.polygonAltitude(0.003)
+.polygonCapColor(()=>"rgba(0,150,255,0.05)")
+.polygonSideColor(()=>"rgba(0,100,200,0.2)")
+.polygonStrokeColor(()=>"cyan");
+
+});
+
+
+/* ROTATION */
+
+const controls = globe.controls();
+
+controls.autoRotate=true;
+controls.autoRotateSpeed=0.25;
+
+controls.minDistance=200;
+controls.maxDistance=500;
+
+
+/* TABLE SYSTEM */
+
+const tableBody=document.querySelector("#floatTable tbody");
+const tableBtn=document.getElementById("showTableBtn");
+const tableContainer=document.getElementById("dataTableContainer");
+const searchBox=document.getElementById("searchBox");
+
+
+function loadTable(){
+
+tableBody.innerHTML="";
+
+floats.forEach(f=>{
+
+const row=document.createElement("tr");
+
+row.innerHTML=`
+<td>${f.id}</td>
+<td>${f.lat.toFixed(2)}</td>
+<td>${f.lng.toFixed(2)}</td>
+<td>${f.temp}</td>
+<td>${f.sal}</td>
+`;
+
+row.onclick=()=>{
+
+globe.pointOfView({
+lat:f.lat,
+lng:f.lng,
+altitude:1.5
+},2000);
+
+};
+
+tableBody.appendChild(row);
+
+});
+
+}
+
+
+/* SHOW TABLE */
+
+tableBtn.onclick=()=>{
+
+if(tableContainer.style.display==="none"){
+
+loadTable();
+tableContainer.style.display="block";
+
+}else{
+
+tableContainer.style.display="none";
+
+}
+
+};
+
+
+/* SEARCH */
+
+searchBox.addEventListener("keyup",()=>{
+
+const filter=searchBox.value.toUpperCase();
+
+const rows=document.querySelectorAll("#floatTable tbody tr");
+
+rows.forEach(r=>{
+
+const txt=r.children[0].innerText;
+
+r.style.display=txt.includes(filter)?"":"none";
+
+});
+
+});
+
+
+/* SORT TABLE */
+
+function sortTable(n){
+
+const table=document.getElementById("floatTable");
+
+let switching=true;
+
+while(switching){
+
+switching=false;
+
+const rows=table.rows;
+
+for(let i=1;i<rows.length-1;i++){
+
+let shouldSwitch=false;
+
+if(rows[i].cells[n].innerHTML >
+rows[i+1].cells[n].innerHTML){
+
+shouldSwitch=true;
+break;
+
+}
+
+}
+
+if(shouldSwitch){
+
+rows[i].parentNode.insertBefore(rows[i+1],rows[i]);
+switching=true;
+
+}
+
+}
+
+}
+
+
+/* DOWNLOAD CSV */
+
+document.getElementById("downloadCSV").onclick=()=>{
+
+let csv="Float ID,Latitude,Longitude,Temp,Salinity\n";
+
+floats.forEach(f=>{
+
+csv+=`${f.id},${f.lat},${f.lng},${f.temp},${f.sal}\n`;
+
+});
+
+const blob=new Blob([csv]);
+
+const a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+a.download="float_data.csv";
+a.click();
+
+};
+
+</script>
+
+</body>
+</html>
+```

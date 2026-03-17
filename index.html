@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lumen Dashboard</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+ <nav class="navbar">
+
+<!-- LOGO -->
+
+<div class="logo">
+
+<div class="logo-icon">
+<i class="fa-solid fa-water"></i>
+</div>
+
+<div class="logo-text">
+<h2>Lumen</h2>
+<p>ARGO Data Intelligence</p>
+</div>
+
+</div>
+
+
+<!-- NAV MENU -->
+
+<ul class="nav-menu">
+
+<a href="chatbot.html" class="nav-item active">
+    <i class="fas fa-robot"></i> Chatbot
+</a>
+
+
+<li onclick="window.location.href='map.html'">
+<i class="fa-solid fa-location-dot"></i>
+Map View
+</li>
+
+
+
+<li onclick="window.location.href='data.html'">
+<i class="fa-solid fa-table"></i>Data Table
+</li>
+
+<li onclick="window.location.href='analyze.html'">
+<i class="fa-solid fa-chart-line"></i> Analytics
+</li>
+
+<li onclick="window.location.href='oxygen.html'">
+<i class="fa-solid fa-lightbulb"></i> Insights
+</li>
+
+
+    
+<li onclick="window.location.href='h.html'">
+<i class="fa-solid fa-cloud"></i> Forecast
+</li>
+
+<li>
+<i class="fa-solid fa-gear"></i> Settings
+</li>
+
+</ul>
+
+
+<!-- RIGHT SIDE -->
+
+<div class="nav-right">
+
+<div class="ocean-select">
+<i class="fa-solid fa-globe"></i>
+Indian Ocean
+<i class="fa-solid fa-chevron-down"></i>
+</div>
+
+<div class="icon notification">
+<i class="fa-solid fa-bell"></i>
+<span class="badge">2</span>
+</div>
+
+<div class="icon">
+<i class="fa-solid fa-moon"></i>
+</div>
+
+
+</div>
+
+</nav>
+
+
+
+
+
+
+
+
+<!-- STATS -->
+
+<div class="stats">
+
+<div class="card">
+
+<div class="card-text">
+
+<h4>Live Temperature</h4>
+<h2 id="temp">-- °C</h2>
+<p>Real-time Average</p>
+
+</div>
+
+<img src="images/temp-glow.png" class="card-img">
+
+</div>
+
+
+<div class="card">
+
+<div class="card-text">
+
+<h4>Live Salinity</h4>
+<h2 id="sal">-- PSU</h2>
+<p>Real-time Average</p>
+
+</div>
+
+<img src="images/salinity-glow.png" class="card-img">
+
+</div>
+
+
+<div class="card">
+
+<div class="card-text">
+
+<h4>Active Floats</h4>
+<h2 id="floats">84 / 126</h2>
+<p>Tracking Now</p>
+
+</div>
+
+<img src="images/floats.png" class="card-img">
+
+</div>
+
+
+<div class="card">
+
+<div class="card-text">
+
+<h4>Ocean Heat</h4>
+<h2 id="heat">--</h2>
+<p>Current Layer</p>
+
+</div>
+
+<img src="images/heat-globe.png" class="card-img">
+
+</div>
+
+</div>
+
+
+
+
+<!-- MAIN GRID -->
+
+<div class="grid">
+
+<!-- OCEAN ALERTS -->
+
+<div class="alerts">
+
+<h3>🚨 Ocean Alerts</h3>
+
+<div class="alert red">
+<strong>HIGH TEMP</strong><br>
+Float ARGO-2145<br>
+29.4°C rising fast
+</div>
+
+<div class="alert orange">
+<strong>SALINITY ALERT</strong><br>
+Arabian Sea<br>
+34.9 PSU detected
+</div>
+
+<div class="alert green">
+<strong>SYSTEM STATUS</strong><br>
+84 floats active
+</div>
+
+</div>
+
+
+
+<!-- CHART -->
+
+<div class="chart">
+
+<h3>Real Time Trends</h3>
+
+<canvas id="trendChart"></canvas>
+
+</div>
+
+
+
+<!-- FLOAT HEALTH -->
+
+<div class="health">
+
+<h3>📡 Float Health Monitor</h3>
+
+<p>Active Floats</p>
+<div class="bar">
+<div class="bar-fill" style="width:84%"></div>
+</div>
+
+<p>Low Battery</p>
+<div class="bar">
+<div class="bar-fill warning" style="width:10%"></div>
+</div>
+
+<p>Signal Lost</p>
+<div class="bar">
+<div class="bar-fill danger" style="width:6%"></div>
+</div>
+
+</div>
+
+
+
+<!-- INSIGHTS -->
+
+<div class="insights">
+
+<h3>Ocean Insights</h3>
+
+<ul>
+
+<li>🌊 North Equator: Warm Surge</li>
+<li>⚠ Bay of Bengal: Salinity Drop</li>
+<li>✔ Mumbai Zone: Stable</li>
+
+</ul>
+
+</div>
+
+
+
+<!-- HEATMAP -->
+
+<div class="heatmap">
+
+<h3>Global Heatmap</h3>
+
+<img src="images/heat-globe.png">
+
+</div>
+
+</div>
+
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
+
+<!-- TOP STATS -->
+
