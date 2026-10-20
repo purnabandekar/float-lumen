@@ -66,8 +66,6 @@ No separate project is required to use or extend the existing FloatChat code.
 ## 🔮 Future Enhancements
 
 - Integrate a trained NLP intent-classification model.
-- Connect to live ARGO datasets or reliable ocean-data APIs.
-- Add ocean-condition forecasting using machine learning.
 - Improve chatbot responses using retrieval-augmented generation (RAG).
 - Add multilingual query support and more detailed ocean insights.
 
